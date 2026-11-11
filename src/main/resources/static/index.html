@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IF Rotas - Conectando o Campus</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="/style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style id="debug-toolbar-style">
+        .debug-toolbar {
+            background: #0f172a;
+            border-bottom: 1px solid #1e293b;
+            color: #cbd5e1;
+            font-family: inherit;
+            position: relative;
+            z-index: 9999;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+        }
+        .debug-toolbar.hidden {
+            display: none !important;
+        }
+        .debug-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.35rem 0.75rem;
+            min-height: 38px;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .debug-bar-left, .debug-bar-center, .debug-bar-right {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .debug-tag {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+        .debug-campus {
+            color: #60a5fa;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .debug-status {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+        .debug-status strong {
+            color: #10b981;
+        }
+        .debug-sep {
+            color: #334155;
+            font-size: 0.75rem;
+            user-select: none;
+        }
+        .debug-group-label {
+            font-size: 0.72rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .debug-btn {
+            background: #1e293b;
+            color: #f1f5f9;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            padding: 0.25rem 0.55rem;
+            font-size: 0.74rem;
+            font-weight: 500;
+            cursor: pointer;
+            line-height: 1.2;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .debug-btn:hover {
+            background: #334155;
+            border-color: #64748b;
+            color: #ffffff;
+        }
+        .debug-btn-profile {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.35);
+            color: #fcd34d;
+        }
+        .debug-btn-profile:hover {
+            background: rgba(245, 158, 11, 0.22);
+            border-color: #f59e0b;
+            color: #ffffff;
+        }
+        .debug-btn-action {
+            background: rgba(59, 130, 246, 0.08);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+        .debug-btn-action:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+        .debug-btn-warn {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+        .debug-btn-warn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #ffffff;
+        }
+        .debug-btn-tool {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            border-radius: 3px;
+            padding: 0.2rem 0.45rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .debug-btn-tool:hover {
+            background: #1e293b;
+            color: #ffffff;
+            border-color: #64748b;
+        }
+        .debug-btn-tool-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-color: #ef4444;
+        }
+        .debug-msg {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: #10b981;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .debug-extra-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        /* Modo Reduzido */
+        .debug-toolbar.collapsed .debug-extra-actions,
+        .debug-toolbar.collapsed .debug-extra-sep,
+        .debug-toolbar.collapsed .debug-group-label {
+            display: none !important;
+        }
+        .debug-toolbar.collapsed .debug-bar-inner {
+            min-height: 30px;
+            padding: 0.2rem 0.6rem;
+        }
+        .debug-toolbar.collapsed .debug-btn {
+            padding: 0.15rem 0.45rem;
+            font-size: 0.7rem;
+        }
+        /* Botao flutuante discreto */
+        .debug-reopen-btn {
+            position: fixed;
+            bottom: 12px;
+            right: 12px;
+            z-index: 9999;
+            background: #0f172a;
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        .debug-reopen-btn:hover {
+            background: #1e293b;
+            border-color: #f59e0b;
+            color: #fcd34d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de Ferramentas de Debug (Compacta, Sem Emojis, Removível) -->
+    <aside id="debug-toolbar" class="debug-toolbar" aria-label="Barra de ferramentas de desenvolvimento">
+        <div class="debug-bar-inner">
+            <div class="debug-bar-left">
+                <span class="debug-tag">DEBUG</span>
+                <span class="debug-campus">IFSP Birigui</span>
+                <span id="debug-user-status" class="debug-status">Deslogado</span>
+            </div>
+
+            <div class="debug-bar-center" id="debug-main-actions">
+                <span class="debug-sep">|</span>
+                <span class="debug-group-label">Login:</span>
+                <button type="button" class="debug-btn debug-btn-profile" onclick="debugLogin('condutor1')" title="Lucas Martins - TSI - Onix Prata (Pq. das Árvores, Birigui)">Condutor 1</button>
+                <button type="button" class="debug-btn debug-btn-profile" onclick="debugLogin('condutor2')" title="Mariana Zanetti - Física - HB20 Branco (Silvares, Birigui)">Condutor 2</button>
+                <button type="button" class="debug-btn debug-btn-profile" onclick="debugLogin('condutor3')" title="Gabriel Rocha - Mecatrônica - Polo Cinza (Jd. Pérola, Birigui)">Condutor 3</button>
+                <button type="button" class="debug-btn debug-btn-profile" onclick="debugLogin('passageiro1')" title="Ana Clara - Passageira (Centro, Birigui)">Passageiro</button>
+
+                <span class="debug-sep debug-extra-sep">|</span>
+                <div class="debug-extra-actions" id="debug-extra-actions">
+                    <button type="button" class="debug-btn debug-btn-action" onclick="debugPublicarRotaBirigui()" title="Publica rota de exemplo em Birigui para o condutor ativo">Publicar Rota</button>
+                    <button type="button" class="debug-btn debug-btn-action" onclick="debugDeslogar()" title="Encerrar sessão ativa">Deslogar</button>
+                    <button type="button" class="debug-btn debug-btn-warn" onclick="debugResetarTudo()" title="Limpar cache local do navegador">Limpar</button>
+                </div>
+            </div>
+
+            <div class="debug-bar-right">
+                <span id="debug-status-msg" class="debug-msg"></span>
+                <button type="button" id="btn-debug-toggle-size" class="debug-btn-tool" onclick="debugToggleSize()" title="Alternar tamanho reduzido/normal">
+                    <span id="debug-size-text">Reduzir</span>
+                </button>
+                <button type="button" id="btn-debug-close" class="debug-btn-tool debug-btn-tool-close" onclick="debugClose()" title="Fechar barra de debug">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Botao flutuante discreto para reabrir caso fechada -->
+    <button type="button" id="debug-reopen-btn" class="debug-reopen-btn" onclick="debugReopen()" style="display: none;" title="Reabrir barra de debug">
+        DEBUG
+    </button>
+
+    <div id="app">
+        <!-- Navbar -->
+        <nav class="navbar" id="navbar" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button id="mobile-menu-btn" class="icon-btn">☰</button>
+                <div class="logo">IF Rotas</div>
+            </div>
+            
+            <div class="nav-right" style="display: flex; align-items: center; gap: 1rem;">
+                <div class="notification-area">
+                    <button id="btn-notifications" class="icon-btn">
+                        🔔<span id="notif-badge" class="badge" style="display: none;">0</span>
+                    </button>
+                    <div id="notif-dropdown" class="glass-panel notif-dropdown" style="display: none;">
+                        <h4 style="margin-bottom: 10px; border-bottom: 1px solid var(--surface-border); padding-bottom: 5px;">Notificações</h4>
+                        <div id="notif-list">
+                            <p class="empty-state" style="padding: 1rem 0;">Sem notificações no momento.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#feed" class="nav-link nav-item">Feed</a></li>
+                <li><a href="#rotas/nova" class="nav-link nav-item">Nova Rota</a></li>
+                <li><a href="#conexoes" class="nav-link nav-item">Conexões</a></li>
+                <li><a href="#perfil" class="nav-link nav-item">Perfil</a></li>
+                <li><a href="#" id="btn-logout" class="nav-link nav-item">Sair</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Container -->
+        <main id="content-area">
+            <!-- As views serão injetadas via JavaScript aqui -->
+        </main>
+
+        <!-- Modal de Mapa Interativo (Nativo <dialog> seguindo Modern Web Guidance) -->
+        <dialog id="modal-mapa" closedby="any" aria-labelledby="modal-mapa-title" class="map-dialog glass-panel">
+            <div class="map-dialog-header">
+                <div>
+                    <h3 id="modal-mapa-title" style="color: var(--primary); margin-bottom: 0.25rem;">🗺️ Mapa Interativo do Trajeto</h3>
+                    <p id="modal-mapa-subtitle" style="font-size: 0.875rem; color: var(--text-secondary);">Visualização da rota até o campus</p>
+                </div>
+                <form method="dialog">
+                    <button type="submit" class="btn-secondary btn-sm" autofocus>✕ Fechar</button>
+                </form>
+            </div>
+
+            <div class="map-stats-bar">
+                <div id="modal-mapa-metricas" class="map-metrics">
+                    <span>🛣️ Calculando trajeto...</span>
+                </div>
+                <button type="button" id="btn-modal-minha-loc" class="btn-secondary btn-sm">
+                    📍 Mostrar Minha Localização
+                </button>
+            </div>
+
+            <div id="mapa-modal-canvas" class="map-canvas"></div>
+
+            <div class="map-legend">
+                <span><i class="legend-dot dot-origin"></i> Origem da Rota</span>
+                <span><i class="legend-dot dot-campus"></i> Campus IFSP (Destino)</span>
+                <span><i class="legend-dot dot-user"></i> Sua Localização (GPS)</span>
+                <span><i class="legend-line"></i> Caminho Sugerido</span>
+            </div>
+        </dialog>
+    </div>
+
+    <!-- Templates -->
+    <template id="tpl-auth">
+        <div class="auth-container">
+            <div class="glass-panel auth-panel">
+                <div class="auth-header">
+                    <h2>Bem-vindo ao <span class="brand">IF Rotas</span></h2>
+                    <p>Conecte-se com a comunidade acadêmica</p>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" data-target="login">Entrar</button>
+                    <button class="tab" data-target="cadastro">Cadastrar</button>
+                </div>
+
+                <form id="form-login" class="auth-form active">
+                    <div class="input-group">
+                        <label>E-mail ou Prontuário</label>
+                        <input type="text" id="login-id" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Senha</label>
+                        <input type="password" id="login-senha" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Acessar</button>
+                </form>
+
+                <form id="form-cadastro" class="auth-form" style="display: none;">
+                    <div class="input-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="cad-nome" required>
+                    </div>
+                    <div class="input-group">
+                        <label>E-mail Institucional</label>
+                        <input type="email" id="cad-email" placeholder="nome@aluno.ifsp.edu.br" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Prontuário</label>
+                        <input type="text" id="cad-prontuario" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Curso</label>
+                        <input type="text" id="cad-curso" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Senha</label>
+                        <input type="password" id="cad-senha" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Tipo de Conta</label>
+                        <select id="cad-tipo">
+                            <option value="PASSAGEIRO">Apenas Passageiro</option>
+                            <option value="CONDUTOR">Condutor (Oferece Caronas)</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="group-cnh" style="display: none;">
+                        <label>CNH</label>
+                        <input type="text" id="cad-cnh">
+                    </div>
+                    <button type="submit" class="btn-primary">Criar Conta</button>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-feed">
+        <div class="feed-container fade-in">
+            <header class="page-header">
+                <h2>Murais de Rotas</h2>
+                <p>Encontre trajetos compatíveis com a sua rotina no campus</p>
+            </header>
+            
+            <div class="filters-bar glass-panel">
+                <input type="text" id="filtro-bairro" placeholder="Bairro de origem..." class="filter-input">
+                <input type="text" id="filtro-curso" placeholder="Filtrar por curso..." class="filter-input">
+                <select id="filtro-turno" class="filter-input">
+                    <option value="">Qualquer horário / turno</option>
+                    <option value="manha">Manhã (05:00 - 12:00)</option>
+                    <option value="tarde">Tarde (12:00 - 18:00)</option>
+                    <option value="noite">Noite (18:00+)</option>
+                </select>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="btn-filtrar" class="btn-secondary">Filtrar</button>
+                    <button id="btn-limpar-filtros" class="btn-secondary" style="border-color: var(--text-secondary); color: var(--text-secondary);">Limpar</button>
+                </div>
+            </div>
+
+            <div class="rotas-grid" id="rotas-list">
+                <!-- Rotas renderizadas aqui -->
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-nova-rota">
+        <div class="form-container fade-in">
+            <div class="glass-panel wide-panel">
+                <header style="margin-bottom: 1.5rem;">
+                    <h2>Publicar Nova Rota</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.25rem;">
+                        Use o GPS ou clique no mapa para marcar sua saída e visualizar o caminho até o campus.
+                    </p>
+                </header>
+
+                <div class="nova-rota-layout">
+                    <form id="form-nova-rota" class="nova-rota-form">
+                        <div class="input-group">
+                            <label for="rota-bairro">Bairro / Ponto de Origem</label>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <input type="text" id="rota-bairro" placeholder="Ex: Residencial Portal da Pérola, Birigui" required style="flex: 1;">
+                                <button type="button" id="btn-buscar-origem" class="btn-secondary btn-sm" title="Localizar endereço digitado no mapa">🔍 Buscar</button>
+                            </div>
+                            <button type="button" id="btn-usar-gps" class="btn-secondary btn-sm" style="width: 100% !important; text-align: center;">
+                                📍 Usar Minha Localização Atual (GPS)
+                            </button>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="rota-destino">Destino (Campus IFSP)</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" id="rota-destino" list="lista-campi-ifsp" placeholder="Ex: IFSP Campus Birigui" value="IFSP Campus Birigui" required style="flex: 1;">
+                                <button type="button" id="btn-buscar-destino" class="btn-secondary btn-sm" title="Atualizar destino no mapa">🏫 Traçar</button>
+                            </div>
+                            <datalist id="lista-campi-ifsp">
+                                <option value="IFSP Campus Birigui"></option>
+                                <option value="IFSP Campus Votuporanga"></option>
+                                <option value="IFSP Campus São Paulo"></option>
+                                <option value="IFSP Campus São Carlos"></option>
+                                <option value="IFSP Campus Campinas"></option>
+                                <option value="IFSP Campus Araraquara"></option>
+                                <option value="IFSP Campus São José do Rio Preto"></option>
+                                <option value="IFSP Campus Catanduva"></option>
+                                <option value="IFSP Campus Barretos"></option>
+                                <option value="IFSP Campus Presidente Epitácio"></option>
+                            </datalist>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="rota-dias">Dias da Semana (separados por vírgula)</label>
+                            <input type="text" id="rota-dias" placeholder="Ex: Seg, Ter, Qua, Qui, Sex" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="rota-hora">Horário Habitual (HH:MM)</label>
+                            <input type="time" id="rota-hora" required>
+                        </div>
+
+                        <div class="input-group" id="grupo-veiculo-rota" style="display: none;">
+                            <label for="rota-veiculo">Veículo (Obrigatório para Condutores)</label>
+                            <select id="rota-veiculo">
+                                <!-- Preenchido via JS -->
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Publicar Rota com Trajeto</button>
+                    </form>
+
+                    <div class="nova-rota-map-panel">
+                        <div id="nova-rota-resumo" class="map-stats-bar" style="margin-bottom: 0.75rem;">
+                            <span>💡 Clique no mapa ou use o GPS para definir a origem e traçar a rota</span>
+                        </div>
+                        <div id="mapa-nova-rota" class="map-canvas"></div>
+                        <div class="map-legend" style="margin-top: 0.5rem;">
+                            <span><i class="legend-dot dot-origin"></i> Sua Saída (Clique no mapa para ajustar)</span>
+                            <span><i class="legend-dot dot-campus"></i> Campus IFSP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-perfil">
+        <div class="perfil-container fade-in">
+            <div class="glass-panel profile-panel">
+                <h2>Meu Perfil</h2>
+                <form id="form-perfil">
+                    <div class="input-group">
+                        <label>Minibiografia</label>
+                        <textarea id="perfil-bio" rows="3"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Preferências de Convivência</label>
+                        <textarea id="perfil-prefs" rows="2" placeholder="Gosta de conversar? Ouve música?"></textarea>
+                    </div>
+                    <button type="submit" class="btn-secondary">Salvar Perfil</button>
+                </form>
+
+                <div id="area-condutor" style="display: none; margin-top: 2rem;">
+                    <h3>Meus Veículos</h3>
+                    <ul id="lista-veiculos" class="vehicle-list"></ul>
+                    
+                    <form id="form-veiculo" style="margin-top: 1rem;">
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="veiculo-modelo" placeholder="Modelo" required>
+                            <input type="text" id="veiculo-placa" placeholder="Placa" required>
+                            <input type="text" id="veiculo-cor" placeholder="Cor" required>
+                            <input type="number" id="veiculo-cap" placeholder="Lugares" required min="1">
+                        </div>
+                        <button type="submit" class="btn-primary" style="margin-top: 10px;">Adicionar Veículo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-conexoes">
+        <div class="conexoes-container fade-in">
+            <header class="page-header">
+                <h2>Minhas Conexões</h2>
+                <p>Gerencie suas solicitações recebidas, conexões ativas e pedidos de carona.</p>
+            </header>
+
+            <div class="conexao-secao" style="margin-bottom: 2.5rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+                    📥 Solicitações Recebidas
+                    <span id="badge-recebidas-count" class="badge-tag" style="display: none;">0</span>
+                </h3>
+                <div id="lista-recebidas" class="rotas-grid">
+                    <p class="empty-state">Carregando solicitações...</p>
+                </div>
+            </div>
+
+            <div class="conexao-secao" style="margin-bottom: 2.5rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;">
+                    💬 Conexões Ativas (Bate-Papo Liberado)
+                </h3>
+                <div id="lista-ativas" class="rotas-grid">
+                    <p class="empty-state">Carregando conexões ativas...</p>
+                </div>
+            </div>
+
+            <div class="conexao-secao" style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                    📤 Minhas Solicitações Enviadas
+                </h3>
+                <div id="lista-enviadas" class="rotas-grid">
+                    <p class="empty-state">Carregando solicitações enviadas...</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-chat">
+        <div class="chat-container fade-in">
+            <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h2 id="chat-header-title">Bate-Papo da Conexão</h2>
+                    <p id="chat-header-subtitle" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" id="btn-chat-mapa" class="btn-secondary btn-sm" style="display: none;">🗺️ Ver Mapa do Trajeto</button>
+                    <a href="#conexoes" class="btn-secondary btn-sm" style="text-decoration: none;">&larr; Voltar</a>
+                </div>
+            </header>
+            <div class="glass-panel" style="display: flex; flex-direction: column; height: 60vh;">
+                <div id="chat-messages" style="flex: 1; overflow-y: auto; margin-bottom: 1rem; padding-right: 1rem;">
+                    <!-- Mensagens -->
+                </div>
+                <form id="form-chat" style="display: flex; gap: 10px;">
+                    <input type="text" id="chat-input" class="filter-input" placeholder="Digite sua mensagem..." style="flex: 1;" required>
+                    <button type="submit" class="btn-primary" style="width: auto; padding: 0 2rem;">Enviar</button>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <script src="/app.js?v=2"></script>
+</body>
+</html>

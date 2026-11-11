@@ -1,0 +1,54 @@
+# =====================================================================
+# .gitignore - Mantém APENAS o código e arquivos necessários para rodar
+# =====================================================================
+
+# 1. Arquivos auxiliares de contexto / documentação gerada
+agents.contexto.md
+HELP.md
+*.pdf
+*.odt
+
+# 2. Saída de compilação e builds do Maven
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+.mvn/wrapper/maven-wrapper.jar
+
+# 3. Configurações locais de IDEs e Editores
+# VS Code
+.vscode/
+
+# Eclipse / Spring Tool Suite (STS)
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# 4. Arquivos temporários, logs e de Sistema Operacional
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
